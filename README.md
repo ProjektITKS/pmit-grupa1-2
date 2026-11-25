@@ -22,6 +22,17 @@ SecureNotes pozwala użytkownikowi:
 | [docs/DoR_DoD.md](docs/DoR_DoD.md) | Definition of Ready / Definition of Done |
 | [docs/KANBAN.md](docs/KANBAN.md) | Przeniesienie backlogu na tablicę Kanban (GitHub Projects) |
 | [SPRINT1_PLAN.md](SPRINT1_PLAN.md) | Plan i przegląd Sprintu 1 |
+| [SPRINT2_PLAN.md](SPRINT2_PLAN.md) | Plan i przegląd Sprintu 2 |
+| [docs/RETROSPECTIVES.md](docs/RETROSPECTIVES.md) | Retrospektywy sprintów |
+
+## Projekt kryptograficzny
+- Klucz 256-bit wyprowadzany z hasła przez **scrypt** (N=2^14, r=8, p=1) z losową solą 128-bit.
+- Treść szyfrowana **AES-256-GCM** z losowym nonce 96-bit dla każdego zapisu;
+  identyfikator notatki jest danymi uwierzytelnianymi (AAD), więc szyfrogramu nie da się
+  przenieść do innej notatki.
+- Błędne hasło jest wykrywane przez `verifier` (zaszyfrowana stała wartość).
+- Błędne hasło i uszkodzone dane dają ten sam wyjątek `InvalidPassword`.
+- Hasło ani jawna treść nie są zapisywane ani logowane. Używamy wyłącznie biblioteki `cryptography`.
 
 ## Uruchomienie lokalne
 ```bash
@@ -29,9 +40,14 @@ python -m venv .venv
 # Linux/macOS: source .venv/bin/activate
 # Windows:     .venv\Scripts\activate
 pip install -r requirements.txt
-flake8 && black --check . && bandit -r src -q && pytest -q
+flake8 && black --check . && bandit -r src -q && pytest -q --cov=src
 ```
 
 ## CI/CD
 Każdy push i pull request do `main` uruchamia pipeline GitHub Actions
-(`.github/workflows/ci.yml`): flake8 → black → bandit → pytest.
+(`.github/workflows/ci.yml`): flake8 → black → bandit → pytest z pokryciem (próg 80%) → SonarCloud.
+
+Konfiguracja SonarCloud: import repozytorium w sonarcloud.io, wyłączenie *Automatic Analysis*,
+dodanie sekretu repozytorium `SONAR_TOKEN` (Settings → Secrets and variables → Actions)
+i ustawienie `sonar.organization` / `sonar.projectKey` w `sonar-project.properties`.
+Bez sekretu krok Sonar jest pomijany, a reszta pipeline'u działa.

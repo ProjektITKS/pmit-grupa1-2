@@ -9,8 +9,12 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # pełna historia dla analizy SonarQube
 
       - uses: actions/setup-python@v5
         with:
@@ -31,5 +35,11 @@ jobs:
       - name: Security lint (bandit)
         run: bandit -r src -q
 
-      - name: Run tests
-        run: pytest -q
+      - name: Run tests with coverage
+        run: pytest -q --cov=src --cov-report=xml --cov-report=term-missing --cov-fail-under=80
+
+      - name: SonarQube scan (SonarCloud)
+        if: env.SONAR_TOKEN != ''
+        uses: SonarSource/sonarqube-scan-action@v5
+        env:
+          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL || 'https://sonarcloud.io' }}

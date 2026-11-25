@@ -21,5 +21,21 @@ Format: *Given / When / Then*. Identyfikatory odpowiadają pozycjom w `BACKLOG.c
 ## US5 — Walidacja
 - Pusty tytuł, tytuł > 100 znaków lub treść > 10 000 znaków → `ValueError`, notatka nie zostaje zapisana.
 
+## US6 — Szyfrowanie treści
+- **Given** magazyn odblokowany hasłem, **when** użytkownik tworzy lub edytuje notatkę,
+  **then** obiekt notatki przechowuje tylko `ciphertext` (AES-256-GCM), który nie zawiera tekstu jawnego.
+- Dwukrotne zaszyfrowanie tej samej treści daje różne szyfrogramy (losowy nonce).
+
+## US7 — Odczyt notatki hasłem
+- **Given** notatka utworzona w magazynie, **when** użytkownik wywołuje `read(id)`,
+  **then** otrzymuje dokładnie oryginalną treść (także z polskimi znakami).
+
+## US8 — Ochrona przed błędnym hasłem
+- **Given** istniejący magazyn (sól + verifier), **when** użytkownik otwiera go błędnym hasłem,
+  **then** zgłaszany jest `InvalidPassword` i żadna treść nie jest zwracana.
+- **Given** zmodyfikowany szyfrogram lub szyfrogram przeniesiony z innej notatki,
+  **when** użytkownik go odczytuje, **then** zgłaszany jest `InvalidPassword`.
+
 ## Jakość (wszystkie sprinty)
 - CI zielone: flake8, black --check, bandit, pytest.
+- Pokrycie testami `src/` ≥ 80% (od Sprintu 2), SonarCloud Quality Gate = Passed.

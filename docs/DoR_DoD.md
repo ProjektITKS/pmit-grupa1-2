@@ -11,6 +11,8 @@ Pozycja jest skończona, gdy:
 - kod jest w `main` przez pull request z co najmniej jednym code review,
 - testy jednostkowe pokrywają nową funkcjonalność i przechodzą,
 - pipeline CI jest zielony (flake8, black --check, bandit, pytest),
+- pokrycie testami `src/` ≥ 80%, a SonarCloud Quality Gate = Passed (od Sprintu 2),
+- kod kryptograficzny przeszedł code review przez dwie osoby (od Sprintu 2),
 - spełnione są kryteria akceptacji z `docs/ACCEPTANCE_CRITERIA.md`,
 - kod nie loguje ani nie zapisuje haseł i jawnej treści notatek,
 - zaktualizowano dokumentację (README / backlog / plan sprintu) i status karty na tablicy Kanban.

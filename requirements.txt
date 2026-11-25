@@ -1,4 +1,6 @@
+cryptography>=42
 pytest>=8
+pytest-cov>=5
 flake8>=7
 black>=24
 bandit>=1.7

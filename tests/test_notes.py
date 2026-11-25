@@ -1,11 +1,14 @@
 import pytest
 
+from src.crypto import InvalidPassword
 from src.notes import MAX_CONTENT_LEN, MAX_TITLE_LEN, NoteNotFound, NoteStore
+
+PASSWORD = "correct horse battery staple"
 
 
 @pytest.fixture
 def store():
-    return NoteStore()
+    return NoteStore(PASSWORD)
 
 
 def test_create_note_is_listed(store):
@@ -30,9 +33,9 @@ def test_list_sorted_by_last_modification(store):
 
 def test_update_changes_content_and_timestamp(store):
     note = store.create("Plan", "v1")
-    updated = store.update(note.id, "Plan", "v2")
-    assert updated.content == "v2"
-    assert updated.updated_at >= updated.created_at
+    store.update(note.id, "Plan", "v2")
+    assert store.read(note.id) == "v2"
+    assert note.updated_at >= note.created_at
 
 
 def test_delete_removes_note(store):
@@ -59,3 +62,42 @@ def test_invalid_note_is_rejected(store, title, content):
     with pytest.raises(ValueError):
         store.create(title, content)
     assert store.list() == []
+
+
+# --- Sprint 2: szyfrowanie (US6-US8) ---
+
+
+def test_content_is_stored_only_as_ciphertext(store):
+    note = store.create("PIN", "1234 tajne")
+    assert not hasattr(note, "content")
+    assert "tajne" not in note.ciphertext
+
+
+def test_read_returns_original_content(store):
+    note = store.create("Hasła", "zażółć gęślą jaźń")
+    assert store.read(note.id) == "zażółć gęślą jaźń"
+
+
+def test_reopen_with_correct_password(store):
+    reopened = NoteStore(PASSWORD, salt=store.salt, verifier=store.verifier)
+    assert reopened.salt == store.salt
+
+
+def test_reopen_with_wrong_password_is_rejected(store):
+    with pytest.raises(InvalidPassword):
+        NoteStore("wrong", salt=store.salt, verifier=store.verifier)
+
+
+def test_tampered_ciphertext_is_rejected(store):
+    note = store.create("Konto", "IBAN")
+    note.ciphertext = note.ciphertext[:-4] + "AAAA"
+    with pytest.raises(InvalidPassword):
+        store.read(note.id)
+
+
+def test_ciphertext_cannot_be_swapped_between_notes(store):
+    a = store.create("A", "treść A")
+    b = store.create("B", "treść B")
+    b.ciphertext = a.ciphertext
+    with pytest.raises(InvalidPassword):
+        store.read(b.id)
