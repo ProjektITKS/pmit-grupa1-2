@@ -1,14 +1,20 @@
-"""Model notatek i magazyn notatek z szyfrowaną treścią (Sprint 2)."""
+"""Model notatek i magazyn notatek z szyfrowaną treścią."""
 
+import base64
+import hmac
+import json
+import os
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Dict, List, Optional
+from pathlib import Path
+from typing import Dict, List, Optional, Union
 from uuid import uuid4
 
 from src import crypto
 
 MAX_TITLE_LEN = 100
 MAX_CONTENT_LEN = 10_000
+FILE_VERSION = 1
 _VERIFIER_PLAINTEXT = "securenotes-verifier"
 
 
@@ -95,3 +101,76 @@ class NoteStore:
     def delete(self, note_id: str) -> None:
         self.get(note_id)
         del self._notes[note_id]
+
+    # --- Sprint 3: wyszukiwanie, zmiana hasła, trwały zapis ---
+
+    def search(self, query: str) -> List[Note]:
+        """Notatki z ``query`` w tytule (bez rozróżniania wielkości liter)."""
+        q = query.casefold()
+        return [n for n in self.list() if q in n.title.casefold()]
+
+    def change_password(self, old_password: str, new_password: str) -> None:
+        """Weryfikuje stare hasło i szyfruje wszystkie notatki nowym kluczem."""
+        if not hmac.compare_digest(
+            crypto.derive_key(old_password, self.salt), self._key
+        ):
+            raise crypto.InvalidPassword()
+        plaintexts = {note_id: self.read(note_id) for note_id in self._notes}
+        new_salt = crypto.new_salt()
+        new_key = crypto.derive_key(new_password, new_salt)
+        for note_id, content in plaintexts.items():
+            self._notes[note_id].ciphertext = crypto.encrypt(
+                new_key, content, aad=note_id
+            )
+        self.salt, self._key = new_salt, new_key
+        self.verifier = crypto.encrypt(new_key, _VERIFIER_PLAINTEXT)
+
+    def save(self, path: Union[str, Path]) -> None:
+        """Zapisuje magazyn do pliku JSON; treść notatek wyłącznie jako szyfrogram."""
+        data = {
+            "version": FILE_VERSION,
+            "kdf": {
+                "name": "scrypt",
+                "n": crypto.SCRYPT_N,
+                "r": crypto.SCRYPT_R,
+                "p": crypto.SCRYPT_P,
+            },
+            "salt": base64.b64encode(self.salt).decode("ascii"),
+            "verifier": self.verifier,
+            "notes": [
+                {
+                    "id": n.id,
+                    "title": n.title,
+                    "ciphertext": n.ciphertext,
+                    "created_at": n.created_at.isoformat(),
+                    "updated_at": n.updated_at.isoformat(),
+                }
+                for n in self._notes.values()
+            ],
+        }
+        path = Path(path)
+        tmp = path.with_name(path.name + ".tmp")
+        tmp.write_text(json.dumps(data, ensure_ascii=False, indent=2), "utf-8")
+        os.replace(tmp, path)
+
+    @classmethod
+    def load(cls, path: Union[str, Path], password: str) -> "NoteStore":
+        """Wczytuje magazyn z pliku; błędne hasło -> ``InvalidPassword``."""
+        data = json.loads(Path(path).read_text("utf-8"))
+        if data.get("version") != FILE_VERSION:
+            raise ValueError(f"unsupported file version: {data.get('version')}")
+        store = cls(
+            password,
+            salt=base64.b64decode(data["salt"]),
+            verifier=data["verifier"],
+        )
+        for item in data["notes"]:
+            note = Note(
+                title=item["title"],
+                ciphertext=item["ciphertext"],
+                id=item["id"],
+                created_at=datetime.fromisoformat(item["created_at"]),
+                updated_at=datetime.fromisoformat(item["updated_at"]),
+            )
+            store._notes[note.id] = note
+        return store

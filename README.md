@@ -23,7 +23,17 @@ SecureNotes pozwala użytkownikowi:
 | [docs/KANBAN.md](docs/KANBAN.md) | Przeniesienie backlogu na tablicę Kanban (GitHub Projects) |
 | [SPRINT1_PLAN.md](SPRINT1_PLAN.md) | Plan i przegląd Sprintu 1 |
 | [SPRINT2_PLAN.md](SPRINT2_PLAN.md) | Plan i przegląd Sprintu 2 |
+| [SPRINT3_PLAN.md](SPRINT3_PLAN.md) | Plan i przegląd Sprintu 3 |
 | [docs/RETROSPECTIVES.md](docs/RETROSPECTIVES.md) | Retrospektywy sprintów |
+| [docs/RAPORT.md](docs/RAPORT.md) | Raport końcowy (źródło do wersji PDF) |
+| [CHANGELOG.md](CHANGELOG.md) | Zmiany w kolejnych sprintach |
+
+## Demo
+```bash
+python -m examples.demo
+```
+Scenariusz: utworzenie notatek → zapis do pliku (bez tekstu jawnego) → odczyt hasłem →
+odmowa przy błędnym haśle → wyszukiwanie → zmiana hasła.
 
 ## Projekt kryptograficzny
 - Klucz 256-bit wyprowadzany z hasła przez **scrypt** (N=2^14, r=8, p=1) z losową solą 128-bit.
@@ -33,6 +43,10 @@ SecureNotes pozwala użytkownikowi:
 - Błędne hasło jest wykrywane przez `verifier` (zaszyfrowana stała wartość).
 - Błędne hasło i uszkodzone dane dają ten sam wyjątek `InvalidPassword`.
 - Hasło ani jawna treść nie są zapisywane ani logowane. Używamy wyłącznie biblioteki `cryptography`.
+- Plik danych (JSON) zawiera: `version`, parametry KDF, sól, verifier oraz notatki z szyfrogramem treści.
+  Zapis jest atomowy (plik tymczasowy + `os.replace`).
+- **Tytuły notatek nie są szyfrowane.** To świadomy kompromis, który pozwala wyszukiwać i listować
+  notatki bez odszyfrowywania treści. Poufne informacje należy umieszczać w treści.
 
 ## Uruchomienie lokalne
 ```bash

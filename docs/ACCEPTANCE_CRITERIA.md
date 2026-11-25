@@ -36,6 +36,21 @@ Format: *Given / When / Then*. Identyfikatory odpowiadają pozycjom w `BACKLOG.c
 - **Given** zmodyfikowany szyfrogram lub szyfrogram przeniesiony z innej notatki,
   **when** użytkownik go odczytuje, **then** zgłaszany jest `InvalidPassword`.
 
+## US9 — Trwały zapis notatek
+- **Given** magazyn z notatkami, **when** użytkownik zapisuje go do pliku i wczytuje tym samym hasłem,
+  **then** identyfikatory, tytuły, daty i odszyfrowane treści są identyczne.
+- Plik nie zawiera tekstu jawnego żadnej notatki ani hasła.
+- Plik z nieobsługiwaną wartością `version` jest odrzucany (`ValueError`).
+
+## US10 — Zmiana hasła
+- **Given** poprawne stare hasło, **when** użytkownik zmienia hasło,
+  **then** wszystkie szyfrogramy się zmieniają, nowe hasło je odszyfrowuje, a stare zostaje odrzucone.
+- **Given** błędne stare hasło, **then** zgłaszany jest `InvalidPassword`, a notatki pozostają bez zmian.
+
+## US11 — Wyszukiwanie po tytule
+- **Given** notatki „Lista zakupów” i „Zakupy świąteczne”, **when** użytkownik szuka „ZAKUP”,
+  **then** otrzymuje obie notatki; dla frazy bez dopasowań otrzymuje pustą listę.
+
 ## Jakość (wszystkie sprinty)
 - CI zielone: flake8, black --check, bandit, pytest.
 - Pokrycie testami `src/` ≥ 80% (od Sprintu 2), SonarCloud Quality Gate = Passed.
