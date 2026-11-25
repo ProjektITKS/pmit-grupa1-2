@@ -1,6 +1,8 @@
-
-id,ryzyko,prawdopodobienstwo,wpływ,reakcja,właściciel,plan_awaryjny
-R1,Brak doświadczenia z CI,Średnie,Wysoki,Szkolenie+szablon CI,DevOps,Wyłączyć regułę i przejść małymi krokami
-R2,Opóźnienia w komunikacji,Wysokie,Średni,Standupy 10min/tydz,PM,Asynchroniczny raport w README
-R3,Nadmiar zakresu,Średnie,Wysoki,Timeboxing i MoSCoW,PM,Obciąć funkcje NICE-TO-HAVE
-R4,Flaky testy,Niskie,Średni,Seed losowości,Tester,Wyłączyć test i naprawić w 24h
+id,ryzyko,kategoria,prawdopodobienstwo,wpływ,reakcja,właściciel,plan_awaryjny,status
+R1,Utrata hasła przez użytkownika = trwała utrata dostępu do notatek,Biznesowe,Średnie,Wysoki,Jasny komunikat w dokumentacji i UI; brak odzyskiwania jest decyzją projektową,PO,Eksport zaszyfrowanej kopii zapasowej (US12),Otwarte
+R2,Błędne użycie kryptografii (stały nonce/IV; słaby KDF; własny algorytm),Techniczne,Średnie,Wysoki,Tylko biblioteka cryptography; AES-256-GCM + scrypt; losowa sól i nonce; code review modułu crypto,Dev,Wstrzymać release i poprawić moduł przed demo,Otwarte
+R3,Wyciek jawnej treści (logi; wyjątki; pliki tymczasowe),Bezpieczeństwo,Niskie,Wysoki,Zakaz logowania treści; test sprawdzający brak plaintextu w pliku danych; bandit w CI,Tester,Usunąć wadliwy zapis i unieważnić plik danych,Otwarte
+R4,Brak doświadczenia z CI/SonarQube,Techniczne,Średnie,Średni,Gotowy szablon CI; konfiguracja małymi krokami (lint -> testy -> Sonar),DevOps,Uruchomić Sonar jako krok opcjonalny,Otwarte
+R5,Rozrost zakresu (UI; synchronizacja; współdzielenie),Organizacyjne,Wysokie,Średni,MoSCoW + timeboxing; lista OUT w Project Charterze,PM,Przesunąć COULD do kolejnej wersji,Otwarte
+R6,Ograniczona dostępność zespołu (sesja; inne przedmioty),Organizacyjne,Wysokie,Średni,Cotygodniowy krótki stand-up; zadania max 1 dzień pracy,PM,Asynchroniczny status w GitHub Projects,Otwarte
+R7,Utrata kompatybilności formatu pliku między wersjami,Techniczne,Niskie,Średni,Pole version w formacie pliku; testy odczytu,Dev,Skrypt migracji formatu,Otwarte

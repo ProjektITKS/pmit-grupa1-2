@@ -1,5 +1,4 @@
-
-pytest
-flake8
-black
-bandit
+pytest>=8
+flake8>=7
+black>=24
+bandit>=1.7
